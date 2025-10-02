@@ -5,13 +5,13 @@ services:
     build: .
     container_name: authapi_app
     expose:
-      - "9090"
+      - "9091"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.authapi.rule=Host(`authapi.seudominio.com`)"
       - "traefik.http.routers.authapi.entrypoints=websecure"
       - "traefik.http.routers.authapi.tls.certresolver=myresolver"
-      - "traefik.http.services.authapi.loadbalancer.server.port=9090"
+      - "traefik.http.services.authapi.loadbalancer.server.port=9091"
     networks:
       - web
 
