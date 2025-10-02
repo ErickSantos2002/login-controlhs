@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expõe a porta padrão do FastAPI
-EXPOSE 9090
+EXPOSE 9091
 
 # Comando para rodar o servidor
 CMD ["gunicorn", "app.main:app", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:9090", "--forwarded-allow-ips=*"]
