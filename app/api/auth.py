@@ -26,6 +26,7 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     role = db.query(Role).filter(Role.name == role_name).first()
     if not role:
         raise HTTPException(status_code=400, detail=f"Role '{role_name}' not found.")
+    print("DEBUG PASSWORD:", repr(user_in.password), type(user_in.password), len(user_in.password))
 
     new_user = User(
         username=user_in.username.lower(),
