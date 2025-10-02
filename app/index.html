@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - Teste</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7f7; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;}
+    .login-box, .welcome-box { background: #fff; padding: 2rem; border-radius: 10px; box-shadow: 0 2px 8px #0001; min-width: 300px;}
+    .login-box h2 { margin-bottom: 1rem;}
+    input { width: 100%; margin-bottom: 1rem; padding: 8px; border: 1px solid #ccc; border-radius: 4px;}
+    button { width: 100%; padding: 10px; border: none; background: #0066ff; color: #fff; border-radius: 4px; font-weight: bold;}
+    .error { color: #b00; margin-bottom: 1rem;}
+  </style>
+</head>
+<body>
+  <div class="login-box" id="loginBox">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="text" id="username" placeholder="Usuário" required />
+      <input type="password" id="password" placeholder="Senha" required />
+      <button type="submit">Entrar</button>
+      <div class="error" id="errorMsg"></div>
+    </form>
+  </div>
+  <div class="welcome-box" id="welcomeBox" style="display:none;">
+    <h2>Testando</h2>
+    <p>Bem-vindo, <span id="userName"></span>!</p>
+    <button onclick="logout()">Sair</button>
+  </div>
+
+  <script>
+    const apiUrl = "http://localhost:8000/login"; // Altere se sua API estiver em outro endereço
+
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.textContent = "";
+
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem('token', data.access_token);
+        localStorage.setItem('username', username);
+        showWelcome(username);
+      } else {
+        const data = await res.json();
+        errorMsg.textContent = data.detail || 'Falha no login!';
+      }
+    });
+
+    function showWelcome(username) {
+      document.getElementById('loginBox').style.display = 'none';
+      document.getElementById('welcomeBox').style.display = '';
+      document.getElementById('userName').textContent = username;
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      document.getElementById('loginBox').style.display = '';
+      document.getElementById('welcomeBox').style.display = 'none';
+      document.getElementById('loginForm').reset();
+    }
+
+    // Se já estiver logado, mostra a tela Testando
+    window.onload = () => {
+      const username = localStorage.getItem('username');
+      if (username) showWelcome(username);
+    };
+  </script>
+</body>
+</html>

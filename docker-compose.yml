@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  authapi:
+    build: .
+    container_name: authapi_app
+    expose:
+      - "9090"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.authapi.rule=Host(`authapi.seudominio.com`)"
+      - "traefik.http.routers.authapi.entrypoints=websecure"
+      - "traefik.http.routers.authapi.tls.certresolver=myresolver"
+      - "traefik.http.services.authapi.loadbalancer.server.port=9090"
+    networks:
+      - web
+
+networks:
+  web:
+    external: true  # mesmo network do traefik que você já criou
