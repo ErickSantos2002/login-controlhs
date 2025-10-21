@@ -67,6 +67,22 @@ def login(user_in: UserLogin, db: Session = Depends(get_db)):
         "user_id": user.id
     }
 
+@router.get("/users/", response_model=list[UserOut])
+def list_users(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Lista todos os usuários cadastrados no sistema.
+    Requer autenticação.
+    """
+    users = db.query(User).all()
+    return users
+
+@router.get("/users/{user_id}", response_model=UserOut)
+def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail=f"Usuário {user_id} não encontrado")
+    return user
+
 @router.put("/users/{user_id}", response_model=UserOut)
 def update_user(user_id: int, user_in: UserUpdate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == user_id).first()
@@ -85,13 +101,6 @@ def update_user(user_id: int, user_in: UserUpdate, db: Session = Depends(get_db)
 
     db.commit()
     db.refresh(user)
-    return user
-
-@router.get("/users/{user_id}", response_model=UserOut)
-def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail=f"Usuário {user_id} não encontrado")
     return user
 
 @router.get("/me", response_model=UserOut)
