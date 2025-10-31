@@ -15,6 +15,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://controlhs.healthsafetytech.com",
+        "https://authapicontrolhs.healthsafetytech.com",
         "http://localhost:5173"
     ],
     allow_credentials=True,
