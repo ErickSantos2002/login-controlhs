@@ -21,8 +21,8 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
             detail="Username already registered"
         )
 
-    # Busca a role pelo nome, ou usa 'comum' como padrão
-    role_name = user_in.role_name or "comum"
+    # Busca a role pelo nome, ou usa 'Usuário' como padrão
+    role_name = user_in.role_name or "Usuário"
     role = db.query(Role).filter(Role.name == role_name).first()
     if not role:
         raise HTTPException(status_code=400, detail=f"Role '{role_name}' not found.")
