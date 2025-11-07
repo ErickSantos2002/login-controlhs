@@ -27,6 +27,7 @@ class Patrimonio(Base):
     categoria = relationship("Categoria", back_populates="patrimonios")
     setor = relationship("Setor", back_populates="patrimonios")
     responsavel = relationship("User")
+    transferencias = relationship("Transferencia", back_populates="patrimonio")
 
     def __repr__(self):
         return f"<Patrimonio(nome={self.nome}, status={self.status})>"

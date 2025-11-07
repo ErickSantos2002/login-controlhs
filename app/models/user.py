@@ -11,9 +11,14 @@ class User(Base):
     username = Column(String, unique=True, nullable=False, index=True)
     password_hash = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Foreign Keys
     role_id = Column(Integer, ForeignKey('roles.id'), nullable=False)
+    setor_id = Column(Integer, ForeignKey('setores.id', ondelete='SET NULL', onupdate='CASCADE'), nullable=True)  # 🆕 NOVO CAMPO
 
+    # Relationships
     role = relationship("Role")
+    setor = relationship("Setor")  # 🆕 NOVO RELACIONAMENTO
 
     def __repr__(self):
-        return f"<User(username={self.username!r}, role={self.role.name if self.role else None})>"
+        return f"<User(username={self.username!r}, role={self.role.name if self.role else None}, setor_id={self.setor_id})>"
