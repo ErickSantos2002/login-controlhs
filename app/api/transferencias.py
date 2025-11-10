@@ -45,7 +45,7 @@ def create_transferencia(
         raise HTTPException(status_code=404, detail="Patrimônio não encontrado.")
     
     # 🆕 VALIDAÇÃO: Verifica permissão do usuário
-    user_role = current_user.role.name.lower() if current_user.role else "usuario"
+    user_role = current_user.role.name.lower() if current_user.role else "usuário"
     
     # Usuários comuns só podem transferir seus próprios patrimônios
     if user_role not in ["administrador", "gestor"]:

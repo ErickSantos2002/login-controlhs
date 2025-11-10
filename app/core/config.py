@@ -1,7 +1,10 @@
 # app/core/config.py
 
 import os
+from dotenv import load_dotenv
 
+# Carrega o arquivo .env da raiz do projeto
+load_dotenv()
 class Settings:
     # Lê as variáveis do ambiente da VPS
     DATABASE_URL: str = os.environ.get('DATABASE_URL')
