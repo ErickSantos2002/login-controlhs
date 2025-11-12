@@ -13,6 +13,8 @@ from app.models.user import User
 import shutil
 import os
 import uuid
+import time
+import re
 from pathlib import Path
 
 router = APIRouter(prefix="/anexos", tags=["Anexos"])
@@ -48,10 +50,10 @@ def validate_file_extension(filename: str) -> bool:
     return extension in ALLOWED_EXTENSIONS
 
 def get_safe_filename(original_filename: str) -> str:
-    """Gera nome de arquivo seguro com UUID."""
-    extension = original_filename.split('.')[-1].lower()
-    safe_name = f"{uuid.uuid4()}.{extension}"
-    return safe_name
+    name, ext = os.path.splitext(original_filename)
+    safe_name = re.sub(r'[^a-zA-Z0-9_\-]', '_', name)
+    timestamp = int(time.time())
+    return f"{safe_name}_{timestamp}{ext.lower()}"
 
 def validate_file_size(file: UploadFile) -> bool:
     """Valida o tamanho do arquivo."""
