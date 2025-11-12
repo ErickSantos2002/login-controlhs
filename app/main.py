@@ -23,6 +23,44 @@ app = FastAPI(
 )
 
 # ========================================
+# 🚀 CONFIGURAÇÃO DE UPLOAD
+# ========================================
+
+# Aumenta limite de tamanho de requisição para 10MB
+# (padrão FastAPI é 1MB)
+from starlette.middleware import Middleware
+from starlette.middleware.base import BaseHTTPMiddleware
+
+class LimitUploadSize(BaseHTTPMiddleware):
+    """Middleware para limitar tamanho de upload."""
+    MAX_REQUEST_SIZE = 10 * 1024 * 1024  # 10MB
+    
+    async def dispatch(self, request, call_next):
+        # Verifica tamanho apenas em uploads
+        if request.method == "POST" and "/anexos/" in str(request.url):
+            content_length = request.headers.get("content-length")
+            if content_length and int(content_length) > self.MAX_REQUEST_SIZE:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": "Arquivo muito grande. Máximo: 10MB"}
+                )
+        
+        response = await call_next(request)
+        return response
+
+# Adiciona o middleware
+app.add_middleware(LimitUploadSize)
+
+# ========================================
+# 📁 GARANTIR QUE PASTA UPLOADS EXISTE
+# ========================================
+
+from pathlib import Path
+
+UPLOAD_DIR = Path("uploads/anexos")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# ========================================
 # CORS CONFIGURATION
 # ========================================
 
