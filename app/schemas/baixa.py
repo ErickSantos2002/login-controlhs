@@ -8,7 +8,6 @@ class BaixaBase(BaseModel):
     tipo: str
     motivo: Optional[str] = None
     aprovado_por: Optional[int] = None
-    documento_anexo: Optional[str] = None
 
 class BaixaCreate(BaixaBase):
     pass
@@ -17,7 +16,6 @@ class BaixaUpdate(BaseModel):
     tipo: Optional[str] = None
     motivo: Optional[str] = None
     aprovado_por: Optional[int] = None
-    documento_anexo: Optional[str] = None
 
 class BaixaOut(BaixaBase):
     id: int

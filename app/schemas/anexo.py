@@ -5,6 +5,7 @@ from datetime import datetime
 
 class AnexoBase(BaseModel):
     patrimonio_id: Optional[int] = None
+    baixa_id: Optional[int] = None
     tipo: str
     caminho_arquivo: str
     descricao: Optional[str] = None

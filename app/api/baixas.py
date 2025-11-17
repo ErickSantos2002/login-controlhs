@@ -44,8 +44,7 @@ def create_baixa(
         detalhes={
             "patrimonio_id": baixa_in.patrimonio_id,
             "tipo": baixa_in.tipo,
-            "motivo": baixa_in.motivo,
-            "documento": baixa_in.documento_anexo
+            "motivo": baixa_in.motivo
         }
     )
 

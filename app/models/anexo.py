@@ -8,6 +8,7 @@ class Anexo(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     patrimonio_id = Column(Integer, ForeignKey("patrimonios.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
+    baixa_id = Column(Integer, ForeignKey("baixas.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=True)
     tipo = Column(String(50), nullable=False)
     caminho_arquivo = Column(String(255), nullable=False)
     descricao = Column(Text, nullable=True)
@@ -16,7 +17,8 @@ class Anexo(Base):
     atualizado_em = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     patrimonio = relationship("Patrimonio")
+    baixa = relationship("Baixa", back_populates="anexos")
     usuario = relationship("User")
 
     def __repr__(self):
-        return f"<Anexo(patrimonio_id={self.patrimonio_id}, tipo={self.tipo}, caminho={self.caminho_arquivo})>"
+        return f"<Anexo(patrimonio_id={self.patrimonio_id}, baixa_id={self.baixa_id}, tipo={self.tipo}, caminho={self.caminho_arquivo})>"

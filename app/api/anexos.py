@@ -6,6 +6,7 @@ from typing import List, Optional
 from app.utils.db import get_db
 from app.models.anexo import Anexo
 from app.models.patrimonio import Patrimonio
+from app.models.baixa import Baixa
 from app.schemas.anexo import AnexoCreate, AnexoUpdate, AnexoOut
 from app.utils.logs import registrar_log
 from app.core.security import get_current_user
@@ -69,6 +70,7 @@ def validate_file_size(file: UploadFile) -> bool:
 @router.post("/", response_model=AnexoOut)
 async def upload_anexo(
     patrimonio_id: Optional[int] = Form(None),
+    baixa_id: Optional[int] = Form(None),
     tipo: str = Form(...),
     descricao: Optional[str] = Form(None),
     file: UploadFile = File(...),
@@ -77,28 +79,36 @@ async def upload_anexo(
 ):
     """
     Faz upload e cria registro de anexo.
-    
+
     ⚠️ REGRAS:
     - Extensões permitidas: PDF, JPG, JPEG, PNG, DOC, DOCX, XLS, XLSX
     - Tamanho máximo: 10MB
     - Nomes de arquivo são sanitizados automaticamente
+    - Pode ser vinculado a um patrimônio OU a uma baixa (não ambos)
     """
-    
+
     # 🛡️ Validação 1: Extensão permitida
     if not validate_file_extension(file.filename):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Tipo de arquivo não permitido. Extensões válidas: {', '.join(ALLOWED_EXTENSIONS.keys())}"
         )
-    
+
     # 🛡️ Validação 2: Tamanho do arquivo
     if not validate_file_size(file):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Arquivo muito grande. Tamanho máximo: {MAX_FILE_SIZE / (1024*1024):.0f}MB"
         )
-    
-    # 🛡️ Validação 3: Patrimônio existe (se fornecido)
+
+    # 🛡️ Validação 3: Não pode ter patrimonio_id E baixa_id ao mesmo tempo
+    if patrimonio_id and baixa_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Anexo não pode ser vinculado a patrimônio e baixa ao mesmo tempo. Escolha apenas um."
+        )
+
+    # 🛡️ Validação 4: Patrimônio existe (se fornecido)
     if patrimonio_id:
         patrimonio = db.query(Patrimonio).filter(Patrimonio.id == patrimonio_id).first()
         if not patrimonio:
@@ -106,11 +116,20 @@ async def upload_anexo(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Patrimônio não encontrado."
             )
-    
+
+    # 🛡️ Validação 5: Baixa existe (se fornecida)
+    if baixa_id:
+        baixa = db.query(Baixa).filter(Baixa.id == baixa_id).first()
+        if not baixa:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Baixa não encontrada."
+            )
+
     # 🔒 Gera nome seguro para o arquivo
     safe_filename = get_safe_filename(file.filename)
     file_path = UPLOAD_DIR / safe_filename
-    
+
     # 💾 Salva o arquivo no disco
     try:
         with open(file_path, "wb") as buffer:
@@ -120,20 +139,21 @@ async def upload_anexo(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro ao salvar arquivo: {str(e)}"
         )
-    
+
     # 📝 Cria registro no banco de dados
     anexo = Anexo(
         patrimonio_id=patrimonio_id,
+        baixa_id=baixa_id,
         tipo=tipo,
         caminho_arquivo=str(file_path),
         descricao=descricao,
         enviado_por=current_user.id,
     )
-    
+
     db.add(anexo)
     db.commit()
     db.refresh(anexo)
-    
+
     # 📋 Log automático
     registrar_log(
         db=db,
@@ -147,10 +167,11 @@ async def upload_anexo(
             "tipo": tipo,
             "descricao": descricao,
             "patrimonio_id": patrimonio_id,
+            "baixa_id": baixa_id,
             "tamanho_bytes": file.size if hasattr(file, 'size') else 'desconhecido'
         }
     )
-    
+
     return anexo
 
 
@@ -217,18 +238,24 @@ def download_anexo(
 @router.get("/", response_model=List[AnexoOut])
 def list_anexos(
     patrimonio_id: Optional[int] = None,
+    baixa_id: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
     """
     Lista todos os anexos cadastrados.
-    
-    Se patrimonio_id for fornecido, filtra apenas anexos daquele patrimônio.
+
+    Pode filtrar por:
+    - patrimonio_id: anexos vinculados a um patrimônio específico
+    - baixa_id: anexos vinculados a uma baixa específica
     """
     query = db.query(Anexo)
-    
+
     if patrimonio_id:
         query = query.filter(Anexo.patrimonio_id == patrimonio_id)
-    
+
+    if baixa_id:
+        query = query.filter(Anexo.baixa_id == baixa_id)
+
     return query.order_by(Anexo.criado_em.desc()).all()
 
 

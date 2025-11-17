@@ -12,12 +12,12 @@ class Baixa(Base):
     motivo = Column(Text, nullable=True)
     data_baixa = Column(DateTime(timezone=True), server_default=func.now())
     aprovado_por = Column(Integer, ForeignKey("users.id", ondelete="SET NULL", onupdate="CASCADE"), nullable=True)
-    documento_anexo = Column(String(255), nullable=True)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
     atualizado_em = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     patrimonio = relationship("Patrimonio")
     aprovador = relationship("User")
+    anexos = relationship("Anexo", back_populates="baixa", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Baixa(patrimonio_id={self.patrimonio_id}, tipo={self.tipo})>"
