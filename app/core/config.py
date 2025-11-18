@@ -1,9 +1,9 @@
 # app/core/config.py
 
 import os
-from typing import List
-from pydantic_settings import BaseSettings
-from pydantic import Field
+from typing import List, Union
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, field_validator
 
 class Settings(BaseSettings):
     """
@@ -15,14 +15,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str = Field(..., description="URL de conexão PostgreSQL")
 
     # Security
-    SECRET_KEY: str = Field(..., min_length=32, description="Chave secreta para JWT (min 32 chars)")
+    SECRET_KEY: str = Field(..., description="Chave secreta para JWT")
     ALGORITHM: str = Field(default="HS256", description="Algoritmo de criptografia JWT")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60, ge=5, le=1440, description="Tempo de expiração do token (5-1440 min)")
 
     # CORS
-    CORS_ORIGINS: List[str] = Field(
+    CORS_ORIGINS: Union[List[str], str] = Field(
         default=["*"],
-        description="Origens permitidas para CORS (separadas por vírgula)"
+        description="Origens permitidas para CORS (separadas por vírgula ou lista JSON)"
     )
 
     # Environment
@@ -36,17 +36,28 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: str = Field(default="INFO", description="Nível de log: DEBUG, INFO, WARNING, ERROR")
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
+    @field_validator('CORS_ORIGINS', mode='before')
+    @classmethod
+    def parse_cors_origins(cls, v):
+        """
+        Converte string separada por vírgula em lista.
+        Aceita: "url1,url2,url3" ou ["url1", "url2", "url3"] ou None
+        """
+        if v is None or v == "":
+            return ["*"]
+        if isinstance(v, str):
+            # Remove espaços e divide por vírgula
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        if isinstance(v, list):
+            return v
+        return ["*"]
 
-        # Converter string separada por vírgula em lista
-        @staticmethod
-        def parse_env_var(field_name: str, raw_val: str):
-            if field_name == "CORS_ORIGINS":
-                return [origin.strip() for origin in raw_val.split(",")]
-            return raw_val
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore"
+    )
 
 # Instância global de configurações
 settings = Settings()
