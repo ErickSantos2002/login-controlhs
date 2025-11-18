@@ -1,5 +1,5 @@
 # app/models/inventario.py
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, func, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, func
 from sqlalchemy.orm import relationship
 from app.utils.db import Base
 import enum
@@ -27,11 +27,11 @@ class Inventario(Base):
     id = Column(Integer, primary_key=True, index=True)
     titulo = Column(String(200), nullable=False)
     descricao = Column(Text, nullable=True)
-    status = Column(SQLEnum(StatusInventario), default=StatusInventario.EM_ANDAMENTO, nullable=False)
+    status = Column(String(20), default=StatusInventario.EM_ANDAMENTO.value, nullable=False)
     responsavel_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL", onupdate="CASCADE"), nullable=True)
     data_inicio = Column(DateTime(timezone=True), server_default=func.now())
     data_fim = Column(DateTime(timezone=True), nullable=True)
-    tipo = Column(SQLEnum(TipoInventario), default=TipoInventario.GERAL, nullable=False)
+    tipo = Column(String(20), default=TipoInventario.GERAL.value, nullable=False)
     filtro_setor_id = Column(Integer, ForeignKey("setores.id", ondelete="SET NULL", onupdate="CASCADE"), nullable=True)
     filtro_categoria_id = Column(Integer, ForeignKey("categorias.id", ondelete="SET NULL", onupdate="CASCADE"), nullable=True)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
@@ -54,7 +54,7 @@ class ItemInventario(Base):
     id = Column(Integer, primary_key=True, index=True)
     inventario_id = Column(Integer, ForeignKey("inventarios.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     patrimonio_id = Column(Integer, ForeignKey("patrimonios.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    situacao = Column(SQLEnum(SituacaoItem), default=SituacaoItem.ENCONTRADO, nullable=False)
+    situacao = Column(String(20), default=SituacaoItem.ENCONTRADO.value, nullable=False)
     observacoes = Column(Text, nullable=True)
     conferido_por = Column(Integer, ForeignKey("users.id", ondelete="SET NULL", onupdate="CASCADE"), nullable=True)
     data_conferencia = Column(DateTime(timezone=True), nullable=True)

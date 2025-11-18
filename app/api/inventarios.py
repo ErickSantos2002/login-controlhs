@@ -128,7 +128,7 @@ def atualizar_inventario(
         raise HTTPException(status_code=404, detail="Inventário não encontrado")
 
     # Não permitir atualizar inventários finalizados ou cancelados
-    if inventario.status in [StatusInventario.CONCLUIDO, StatusInventario.CANCELADO]:
+    if inventario.status in [StatusInventario.CONCLUIDO.value, StatusInventario.CANCELADO.value]:
         raise HTTPException(
             status_code=400,
             detail=f"Não é possível atualizar inventário com status '{inventario.status}'"
@@ -215,7 +215,7 @@ def adicionar_item_inventario(
     if not inventario:
         raise HTTPException(status_code=404, detail="Inventário não encontrado")
 
-    if inventario.status != StatusInventario.EM_ANDAMENTO:
+    if inventario.status != StatusInventario.EM_ANDAMENTO.value:
         raise HTTPException(status_code=400, detail="Só é possível adicionar itens a inventários em andamento")
 
     # Verificar se patrimônio existe
@@ -272,7 +272,7 @@ def adicionar_itens_bulk(
     if not inventario:
         raise HTTPException(status_code=404, detail="Inventário não encontrado")
 
-    if inventario.status != StatusInventario.EM_ANDAMENTO:
+    if inventario.status != StatusInventario.EM_ANDAMENTO.value:
         raise HTTPException(status_code=400, detail="Só é possível adicionar itens a inventários em andamento")
 
     # Verificar quais patrimônios existem
@@ -300,7 +300,7 @@ def adicionar_itens_bulk(
             item = ItemInventario(
                 inventario_id=inventario_id,
                 patrimonio_id=patrimonio_id,
-                situacao=SituacaoItem.ENCONTRADO
+                situacao=SituacaoItem.ENCONTRADO.value
             )
             itens_novos.append(item)
 
@@ -349,7 +349,7 @@ def atualizar_item_inventario(
 
     # Verificar se inventário está em andamento
     inventario = db.query(Inventario).filter(Inventario.id == inventario_id).first()
-    if inventario.status != StatusInventario.EM_ANDAMENTO:
+    if inventario.status != StatusInventario.EM_ANDAMENTO.value:
         raise HTTPException(status_code=400, detail="Só é possível atualizar itens de inventários em andamento")
 
     # Atualizar campos
@@ -399,7 +399,7 @@ def remover_item_inventario(
 
     # Verificar se inventário está em andamento
     inventario = db.query(Inventario).filter(Inventario.id == inventario_id).first()
-    if inventario.status != StatusInventario.EM_ANDAMENTO:
+    if inventario.status != StatusInventario.EM_ANDAMENTO.value:
         raise HTTPException(status_code=400, detail="Só é possível remover itens de inventários em andamento")
 
     db.delete(item)
@@ -438,11 +438,11 @@ def finalizar_inventario(
     if not inventario:
         raise HTTPException(status_code=404, detail="Inventário não encontrado")
 
-    if inventario.status != StatusInventario.EM_ANDAMENTO:
+    if inventario.status != StatusInventario.EM_ANDAMENTO.value:
         raise HTTPException(status_code=400, detail="Só é possível finalizar inventários em andamento")
 
     # Atualizar status e data de fim
-    inventario.status = StatusInventario.CONCLUIDO
+    inventario.status = StatusInventario.CONCLUIDO.value
     inventario.data_fim = datetime.now()
 
     db.commit()
@@ -475,10 +475,10 @@ def cancelar_inventario(
     if not inventario:
         raise HTTPException(status_code=404, detail="Inventário não encontrado")
 
-    if inventario.status != StatusInventario.EM_ANDAMENTO:
+    if inventario.status != StatusInventario.EM_ANDAMENTO.value:
         raise HTTPException(status_code=400, detail="Só é possível cancelar inventários em andamento")
 
-    inventario.status = StatusInventario.CANCELADO
+    inventario.status = StatusInventario.CANCELADO.value
     inventario.data_fim = datetime.now()
 
     db.commit()
@@ -528,13 +528,13 @@ def obter_estatisticas_inventario(
 
     for count, situacao in stats:
         resultado["total_itens"] += count
-        if situacao == SituacaoItem.ENCONTRADO:
+        if situacao == SituacaoItem.ENCONTRADO.value:
             resultado["encontrados"] = count
-        elif situacao == SituacaoItem.NAO_ENCONTRADO:
+        elif situacao == SituacaoItem.NAO_ENCONTRADO.value:
             resultado["nao_encontrados"] = count
-        elif situacao == SituacaoItem.DIVERGENCIA:
+        elif situacao == SituacaoItem.DIVERGENCIA.value:
             resultado["divergencias"] = count
-        elif situacao == SituacaoItem.CONFERIDO:
+        elif situacao == SituacaoItem.CONFERIDO.value:
             resultado["conferidos"] = count
 
     # Pendentes = total - conferidos
