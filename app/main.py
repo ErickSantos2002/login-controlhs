@@ -4,22 +4,31 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import traceback
+import logging
 from app.api import (
-    auth, 
-    patrimonios, 
-    categorias, 
-    setores, 
-    transferencias, 
-    baixas, 
-    logs_auditoria, 
-    inventarios, 
+    auth,
+    patrimonios,
+    categorias,
+    setores,
+    transferencias,
+    baixas,
+    logs_auditoria,
+    inventarios,
     anexos
 )
+from app.core.config import settings
+from app.core.rate_limit import RateLimitMiddleware
+from app.core.logging_config import setup_logging
+
+# Configurar logging
+setup_logging()
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="ControlHS API",
     description="API para controle de patrimônios",
-    version="1.0.0"
+    version="1.0.0",
+    debug=settings.DEBUG
 )
 
 # ========================================
@@ -52,6 +61,20 @@ class LimitUploadSize(BaseHTTPMiddleware):
 app.add_middleware(LimitUploadSize)
 
 # ========================================
+# RATE LIMITING
+# ========================================
+
+if settings.RATE_LIMIT_ENABLED:
+    logger.info(f"Rate limiting habilitado: {settings.RATE_LIMIT_PER_MINUTE} req/min")
+    app.add_middleware(
+        RateLimitMiddleware,
+        calls=settings.RATE_LIMIT_PER_MINUTE,
+        period=60
+    )
+else:
+    logger.warning("Rate limiting DESABILITADO")
+
+# ========================================
 # 📁 GARANTIR QUE PASTA UPLOADS EXISTE
 # ========================================
 
@@ -64,14 +87,10 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 # CORS CONFIGURATION
 # ========================================
 
-# Lista de origens permitidas
-allowed_origins = [
-    "https://controlhs.healthsafetytech.com",
-    "https://authapicontrolhs.healthsafetytech.com",
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://localhost:8000",
-]
+# Lista de origens permitidas (configurável via .env)
+allowed_origins = settings.CORS_ORIGINS
+
+logger.info(f"CORS configurado para: {allowed_origins}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -96,10 +115,10 @@ async def catch_exceptions_middleware(request: Request, call_next):
         response = await call_next(request)
         return response
     except Exception as exc:
-        # Log detalhado do erro
-        print(f"❌ Erro não tratado: {exc}")
-        print(f"Traceback: {traceback.format_exc()}")
-        
+        # Log detalhado do erro com logger
+        logger.error(f"Erro não tratado em {request.method} {request.url.path}: {exc}")
+        logger.debug(f"Traceback completo: {traceback.format_exc()}")
+
         # Determina a origem da requisição
         origin = request.headers.get("origin")
         
@@ -123,20 +142,32 @@ async def catch_exceptions_middleware(request: Request, call_next):
         return response
 
 # ========================================
-# LOGGING MIDDLEWARE (OPCIONAL)
+# LOGGING MIDDLEWARE
 # ========================================
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     """
-    Middleware para logging de requisições (útil para debug)
+    Middleware para logging de requisições
     """
-    print(f"📥 {request.method} {request.url.path}")
-    
+    # Obter IP real do cliente
+    client_ip = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
+
+    if settings.DEBUG:
+        logger.debug(f"Requisição: {request.method} {request.url.path} de {client_ip}")
+
     response = await call_next(request)
-    
-    print(f"📤 {request.method} {request.url.path} - Status: {response.status_code}")
-    
+
+    # Log apenas erros em produção
+    if response.status_code >= 400:
+        logger.warning(
+            f"{request.method} {request.url.path} - "
+            f"Status: {response.status_code} - "
+            f"IP: {client_ip}"
+        )
+    elif settings.DEBUG:
+        logger.debug(f"Resposta: {request.method} {request.url.path} - Status: {response.status_code}")
+
     return response
 
 # ========================================

@@ -14,7 +14,12 @@ class LogAuditoria(Base):
     detalhes = Column(JSON, nullable=True)
     criado_em = Column(DateTime(timezone=True), server_default=func.now())
 
-    usuario = relationship("User")
+    usuario_rel = relationship("User", foreign_keys=[usuario_id])
+
+    @property
+    def usuario(self):
+        """Retorna o nome do usuário que executou a ação"""
+        return self.usuario_rel.username if self.usuario_rel else "Sistema"
 
     def __repr__(self):
         return f"<LogAuditoria(acao={self.acao!r}, entidade={self.entidade!r}, usuario_id={self.usuario_id})>"
