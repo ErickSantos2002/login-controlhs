@@ -15,6 +15,7 @@ class TipoInventario(str, enum.Enum):
     POR_CATEGORIA = "por_categoria"
 
 class SituacaoItem(str, enum.Enum):
+    PENDENTE = "pendente"
     ENCONTRADO = "encontrado"
     NAO_ENCONTRADO = "nao_encontrado"
     DIVERGENCIA = "divergencia"
@@ -54,7 +55,7 @@ class ItemInventario(Base):
     id = Column(Integer, primary_key=True, index=True)
     inventario_id = Column(Integer, ForeignKey("inventarios.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     patrimonio_id = Column(Integer, ForeignKey("patrimonios.id", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
-    situacao = Column(String(20), default=SituacaoItem.ENCONTRADO.value, nullable=False)
+    situacao = Column(String(20), default=SituacaoItem.PENDENTE.value, nullable=False)
     observacoes = Column(Text, nullable=True)
     conferido_por = Column(Integer, ForeignKey("users.id", ondelete="SET NULL", onupdate="CASCADE"), nullable=True)
     data_conferencia = Column(DateTime(timezone=True), nullable=True)

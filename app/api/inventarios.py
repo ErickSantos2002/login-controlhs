@@ -83,7 +83,7 @@ def criar_inventario(
         item = ItemInventario(
             inventario_id=inventario.id,
             patrimonio_id=patrimonio.id,
-            situacao=SituacaoItem.ENCONTRADO.value
+            situacao=SituacaoItem.PENDENTE.value
         )
         db.add(item)
         itens_criados.append(item)
@@ -328,7 +328,7 @@ def adicionar_itens_bulk(
             item = ItemInventario(
                 inventario_id=inventario_id,
                 patrimonio_id=patrimonio_id,
-                situacao=SituacaoItem.ENCONTRADO.value
+                situacao=SituacaoItem.PENDENTE.value
             )
             itens_novos.append(item)
 
@@ -556,7 +556,9 @@ def obter_estatisticas_inventario(
 
     for count, situacao in stats:
         resultado["total_itens"] += count
-        if situacao == SituacaoItem.ENCONTRADO.value:
+        if situacao == SituacaoItem.PENDENTE.value:
+            resultado["pendentes"] = count
+        elif situacao == SituacaoItem.ENCONTRADO.value:
             resultado["encontrados"] = count
         elif situacao == SituacaoItem.NAO_ENCONTRADO.value:
             resultado["nao_encontrados"] = count
@@ -564,8 +566,5 @@ def obter_estatisticas_inventario(
             resultado["divergencias"] = count
         elif situacao == SituacaoItem.CONFERIDO.value:
             resultado["conferidos"] = count
-
-    # Pendentes = total - conferidos
-    resultado["pendentes"] = resultado["total_itens"] - resultado["conferidos"]
 
     return resultado
