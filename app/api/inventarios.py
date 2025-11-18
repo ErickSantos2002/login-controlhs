@@ -62,6 +62,33 @@ def criar_inventario(
         inventario.responsavel_id = current_user.id
 
     db.add(inventario)
+    db.flush()  # Flush para obter o ID do inventário sem fazer commit ainda
+
+    # Buscar patrimônios baseado no tipo de inventário
+    patrimonios_query = db.query(Patrimonio)
+
+    if inventario_in.tipo == "por_setor":
+        # Filtrar por setor
+        patrimonios_query = patrimonios_query.filter(Patrimonio.setor_id == inventario_in.filtro_setor_id)
+    elif inventario_in.tipo == "por_categoria":
+        # Filtrar por categoria
+        patrimonios_query = patrimonios_query.filter(Patrimonio.categoria_id == inventario_in.filtro_categoria_id)
+    # Se tipo == "geral", busca todos (sem filtro adicional)
+
+    patrimonios = patrimonios_query.all()
+
+    # Criar itens do inventário automaticamente
+    itens_criados = []
+    for patrimonio in patrimonios:
+        item = ItemInventario(
+            inventario_id=inventario.id,
+            patrimonio_id=patrimonio.id,
+            situacao=SituacaoItem.ENCONTRADO.value
+        )
+        db.add(item)
+        itens_criados.append(item)
+
+    # Commit de tudo junto (inventário + itens)
     db.commit()
     db.refresh(inventario)
 
@@ -75,7 +102,8 @@ def criar_inventario(
         detalhes={
             "titulo": inventario.titulo,
             "tipo": inventario.tipo,
-            "status": inventario.status
+            "status": inventario.status,
+            "total_itens_adicionados": len(itens_criados)
         }
     )
 
