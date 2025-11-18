@@ -17,7 +17,7 @@ from app.api import (
     anexos
 )
 from app.core.config import settings
-from app.core.rate_limit import RateLimitMiddleware
+# from app.core.rate_limit import RateLimitMiddleware  # Removido - não usado
 from app.core.logging_config import setup_logging
 
 # Configurar logging
@@ -61,18 +61,18 @@ class LimitUploadSize(BaseHTTPMiddleware):
 app.add_middleware(LimitUploadSize)
 
 # ========================================
-# RATE LIMITING
+# RATE LIMITING - REMOVIDO
 # ========================================
+# Rate limiting foi removido pois a API é consumida tanto externamente
+# quanto pelo próprio sistema frontend, causando bloqueios indevidos
+# em ambientes de produção com múltiplos usuários simultâneos.
+#
+# Para proteção contra abuso, considere implementar:
+# - Rate limiting no Traefik/Nginx (camada de proxy)
+# - WAF (Web Application Firewall) como Cloudflare
+# - Autenticação JWT já limita acesso não autorizado
 
-if settings.RATE_LIMIT_ENABLED:
-    logger.info(f"Rate limiting habilitado: {settings.RATE_LIMIT_PER_MINUTE} req/min")
-    app.add_middleware(
-        RateLimitMiddleware,
-        calls=settings.RATE_LIMIT_PER_MINUTE,
-        period=60
-    )
-else:
-    logger.warning("Rate limiting DESABILITADO")
+logger.info("Rate limiting: DESABILITADO (proteção deve ser feita no proxy/WAF)")
 
 # ========================================
 # 📁 GARANTIR QUE PASTA UPLOADS EXISTE

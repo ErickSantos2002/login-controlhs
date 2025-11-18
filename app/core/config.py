@@ -29,9 +29,9 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = Field(default="development", description="Ambiente: development, staging ou production")
     DEBUG: bool = Field(default=True, description="Modo debug (desabilitar em produção)")
 
-    # Rate Limiting
-    RATE_LIMIT_ENABLED: bool = Field(default=True, description="Habilitar rate limiting")
-    RATE_LIMIT_PER_MINUTE: int = Field(default=100, description="Requisições por minuto por IP")
+    # Rate Limiting - REMOVIDO (manter campos para retrocompatibilidade com .env antigos)
+    RATE_LIMIT_ENABLED: bool = Field(default=False, description="[DEPRECATED] Rate limiting removido")
+    RATE_LIMIT_PER_MINUTE: int = Field(default=100, description="[DEPRECATED] Não usado")
 
     # Logging
     LOG_LEVEL: str = Field(default="INFO", description="Nível de log: DEBUG, INFO, WARNING, ERROR")
