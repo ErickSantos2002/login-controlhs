@@ -1,5 +1,5 @@
 # app/schemas/patrimonio.py
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 from typing import Optional
 from datetime import date, datetime
 
@@ -38,3 +38,8 @@ class PatrimonioOut(PatrimonioBase):
     model_config = {
         "from_attributes": True
     }
+
+    @field_serializer('id')
+    def serialize_id(self, value: int) -> str:
+        """Formata o ID com 4 dígitos (0001, 0002, 0015, etc)"""
+        return str(value).zfill(4)
