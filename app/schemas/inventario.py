@@ -6,6 +6,17 @@ from app.models.inventario import StatusInventario, TipoInventario, SituacaoItem
 
 # ==================== SCHEMAS DE INVENTÁRIO (SESSÃO) ====================
 
+class PatrimonioSimples(BaseModel):
+    """Schema simplificado do patrimônio para usar no inventário"""
+    id: int
+    nome: str
+    numero_serie: Optional[str] = None
+    descricao: Optional[str] = None
+    
+    model_config = {
+        "from_attributes": True
+    }
+
 class InventarioBase(BaseModel):
     titulo: str = Field(..., min_length=3, max_length=200, description="Título do inventário")
     descricao: Optional[str] = Field(None, description="Descrição detalhada do inventário")
@@ -67,7 +78,6 @@ class ItemInventarioUpdate(BaseModel):
     observacoes: Optional[str] = None
 
 class ItemInventarioOut(ItemInventarioBase):
-    """Schema de resposta com dados completos do item"""
     id: int
     inventario_id: int
     situacao: SituacaoItem
@@ -75,6 +85,7 @@ class ItemInventarioOut(ItemInventarioBase):
     data_conferencia: Optional[datetime]
     criado_em: datetime
     atualizado_em: datetime
+    patrimonio: Optional[PatrimonioSimples] = None
 
     model_config = {
         "from_attributes": True

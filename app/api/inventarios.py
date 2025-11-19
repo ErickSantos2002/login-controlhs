@@ -17,6 +17,7 @@ from app.schemas.inventario import (
 from app.utils.logs import registrar_log
 from app.core.security import get_current_user
 from app.models.user import User
+from sqlalchemy.orm import joinedload, selectinload
 
 router = APIRouter(prefix="/inventarios", tags=["Inventários"])
 
@@ -136,7 +137,16 @@ def obter_inventario(
     current_user: User = Depends(get_current_user)
 ):
     """Obtém detalhes de uma sessão de inventário incluindo todos os itens."""
-    inventario = db.query(Inventario).filter(Inventario.id == inventario_id).first()
+    
+    inventario = db.query(Inventario).options(
+        joinedload(Inventario.responsavel),
+        joinedload(Inventario.filtro_setor),
+        joinedload(Inventario.filtro_categoria),
+        # ⚠️ ESTAS LINHAS SÃO CRÍTICAS:
+        selectinload(Inventario.itens).joinedload(ItemInventario.patrimonio),
+        selectinload(Inventario.itens).joinedload(ItemInventario.conferido_por_user)
+    ).filter(Inventario.id == inventario_id).first()
+    
     if not inventario:
         raise HTTPException(status_code=404, detail="Inventário não encontrado")
 
